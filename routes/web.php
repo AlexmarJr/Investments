@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\IaChatController;
+use App\Http\Controllers\NewsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,8 +22,14 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/news/investments', [NewsController::class, 'investments'])->name('news.investments');
+    Route::get('/investments', function () {
+        return Inertia::render('Investments');
+    })->name('investments');
 });
+
+Route::post('/chat/chat_api', [IaChatController::class, 'chat'])->middleware(['auth'])->name('chat.chat_api');
 
 require __DIR__.'/auth.php';

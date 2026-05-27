@@ -1,14 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user || {});
-
-// Search input (can be extended to actually search investments)
-const search = ref('');
 
 // Placeholder balance/value — replace with real data from backend when available
 const balance = ref(12500.75);
@@ -20,14 +18,31 @@ const investments = ref([
     { id: 3, name: 'Tesouro Selic', value: 3000.75 },
 ]);
 
-const filteredInvestments = computed(() => {
-    const q = search.value.trim().toLowerCase();
-    if (!q) return investments.value;
-    return investments.value.filter((i) =>
-        i.name.toLowerCase().includes(q) ||
-        (user.value.name && user.value.name.toLowerCase().includes(q))
-    );
+const newsItems = ref([]);
+
+const fetchNews = async () => {
+    try {
+        const res = await axios.get(route('news.investments'));
+        newsItems.value = res.data.items || [];
+    } catch (e) {
+        console.error('Failed to load news', e);
+        newsItems.value = [];
+    }
+};
+
+const formatDate = (d) => {
+    try {
+        const dt = new Date(d);
+        return isNaN(dt.getTime()) ? '' : dt.toLocaleString('pt-BR');
+    } catch (e) {
+        return '';
+    }
+};
+
+onMounted(() => {
+    fetchNews();
 });
+
 </script>
 
 <template>
@@ -40,7 +55,7 @@ const filteredInvestments = computed(() => {
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <!-- Sidebar (separated component) -->
                     <aside class="md:col-span-1">
-                        <Sidebar v-model="search" :user="user" />
+                        <Sidebar :user="user" />
                     </aside>
 
                     <!-- Main content -->
@@ -61,7 +76,7 @@ const filteredInvestments = computed(() => {
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Seus investimentos</h2>
                             <ul class="space-y-3">
-                                <li v-for="inv in filteredInvestments" :key="inv.id" class="flex justify-between items-center">
+                                <li v-for="inv in investments" :key="inv.id" class="flex justify-between items-center">
                                     <div>
                                         <div class="font-medium text-gray-800">{{ inv.name }}</div>
                                         <div class="text-sm text-gray-500">ID: {{ inv.id }}</div>
@@ -75,18 +90,18 @@ const filteredInvestments = computed(() => {
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-lg font-semibold text-gray-800">Notícias de investimentos</h2>
-                                <a href="#" class="text-sm text-blue-600">Ver todas</a>
+                                <a href="https://www.infomoney.com.br/" target="_blank" class="text-sm text-blue-600">Ver todas</a>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <article class="p-4 border rounded">
-                                    <h3 class="font-medium text-gray-800">Mercado sobe com expectativa de juros</h3>
-                                    <p class="text-sm text-gray-600 mt-2">Analistas apontam que a possível redução na taxa de juros pode aquecer investimentos em renda variável.</p>
+                                <article v-if="newsItems.length === 0" class="p-4 border rounded">
+                                    <p class="text-sm text-gray-600">Carregando notícias...</p>
                                 </article>
 
-                                <article class="p-4 border rounded">
-                                    <h3 class="font-medium text-gray-800">Fundo imobiliário anuncia novos resultados</h3>
-                                    <p class="text-sm text-gray-600 mt-2">Distribuições mensais e perspectivas de crescimento com novos ativos no portfólio.</p>
+                                <article v-for="item in newsItems" :key="item.link" class="p-4 border rounded">
+                                    <a :href="item.link" target="_blank" rel="noopener noreferrer" class="text-lg font-medium text-gray-800 hover:underline">{{ item.title }}</a>
+                                    <p class="text-sm text-gray-600 mt-2">{{ item.snippet }}</p>
+                                    <p class="text-xs text-gray-400 mt-2">{{ formatDate(item.pubDate) }}</p>
                                 </article>
                             </div>
                         </div>
