@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\IaChatController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\AssetsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -28,6 +29,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/investments', function () {
         return Inertia::render('Investments');
     })->name('investments');
+    Route::get('/patrimony', function () {
+        return Inertia::render('Patrimony');
+    })->name('patrimony');
+
+    Route::get('/patrimony/assets', [AssetsController::class, 'index'])->name('patrimony.assets');
+
+    Route::post('/patrimony/store', [AssetsController::class, 'store'])->name('patrimony.store');
+
+    Route::delete('/patrimony/{id}', [AssetsController::class, 'destroy'])->name('patrimony.destroy');
 });
 
 Route::post('/chat/chat_api', [IaChatController::class, 'chat'])->middleware(['auth'])->name('chat.chat_api');

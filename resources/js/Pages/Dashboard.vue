@@ -62,8 +62,7 @@ onMounted(() => {
                     <main class="md:col-span-3 space-y-6">
                         <div class="bg-white p-6 rounded-lg shadow-sm flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-500">Olá,</p>
-                                <h1 class="text-2xl font-bold text-gray-800">{{ user.name || 'Usuário' }}</h1>
+                                <p class="text-2xl text-gray-500">Olá, <span class="text-2xl font-bold text-gray-800">{{ user.name || 'Usuário' }}</span></p>
                             </div>
 
                             <div class="text-right">

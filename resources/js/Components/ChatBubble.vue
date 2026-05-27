@@ -9,7 +9,7 @@ import DOMPurify from 'dompurify';
 const page = usePage();
 const user = page.props.auth.user;
 
-const STORAGE_KEY = 'deepseek_chat_' + (user?.id ?? 'guest');
+const STORAGE_KEY = 'AI_CHAT_' + (user?.id ?? 'guest');
 
 const isOpen = ref(false);
 const isModalOpen = ref(false);
@@ -17,17 +17,16 @@ const messages = ref([]);
 const newMessage = ref('');
 const isLoading = ref(false);
 const chatWindowRef = ref(null);
+const messageInput = ref(null);
 
 const loadMessagesFromSession = () => {
     if (typeof window === 'undefined' || !window.sessionStorage) return;
     try {
         const raw = sessionStorage.getItem(STORAGE_KEY);
 
-        console.log(raw);
         if (raw) {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-                // ensure ai messages have sanitized html
                 messages.value = parsed.map((m) => {
                     if (m && m.sender === 'ai' && !m.html) {
                         try {
@@ -118,6 +117,8 @@ const sendMessage = async () => {
         messages.value.push({ text: 'Desculpe, houve um erro ao processar sua mensagem.', sender: 'ai' });
     } finally {
         isLoading.value = false;
+        await nextTick();
+        messageInput.value.focus();
         scrollToBottom();
     }
 };
@@ -238,6 +239,7 @@ watch(messages, (val) => {
 
             <div class="border-t border-gray-200 p-4 flex items-center gap-2">
                 <input
+                    ref="messageInput"
                     type="text"
                     v-model="newMessage"
                     @keyup.enter="sendMessage"
@@ -303,6 +305,7 @@ watch(messages, (val) => {
 
                 <div class="border-t border-gray-200 p-4 flex items-center gap-2">
                     <input
+                        ref="messageInput"
                         type="text"
                         v-model="newMessage"
                         @keyup.enter="sendMessage"
